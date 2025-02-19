@@ -1,0 +1,10 @@
+.loading-component {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    background:	#DCDCDC;
+    z-index: 10000;
+    opacity: 0.2;
+}
