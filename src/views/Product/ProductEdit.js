@@ -8,29 +8,26 @@ import { CKEditor } from '@ckeditor/ckeditor5-react';
 import { errorToast, successToast } from '../../components/Toasts/Toasts';
 import productAPI from './../../apis/productAPI';
 import categoryAPI from './../../apis/categoryAPI';
-import authorAPI from './../../apis/authorAPI';
-import companyAPI from './../../apis/companyAPI';
+import optionValueAPI from './../../apis/optionValueAPI';
 import useFullPageLoader from './../../hooks/useFullPageLoader';
 
 const ProductEdit = (props) => {
   const [loader, showLoader, hideLoader] = useFullPageLoader();
   const history = useHistory();
-  const [fileName, setFileName] = useState('Chọn ảnh');
-  const [previewSource, setPreviewSource] = useState('');
+  const [fileNames, setFileNames] = useState([]);
+  const [previewSources, setPreviewSources] = useState([]);
   const [productItem, setProductItem] = useState({});
   const [cate, setCate] = useState([]);
-  const [author, setAuthor] = useState([]);
-  const [company, setCompany] = useState([]);
-  const [authorId, setAuthorId] = useState([]);
+  const [optionValues, setOptionValues] = useState([]);
+  const [optionValueInputs, setOptionValueInputs] = useState([{ value: "", stock: "" }]);
+  const [deletedImages, setDeletedImages] = useState([]);
 
   useEffect(() => {
     let id = props.match.params.id;
     showLoader();
     productAPI.getProductById(id).then((res) => {
       setProductItem(res.data.data);
-      res.data.data.author.forEach(v => {
-        setAuthorId([...authorId, v._id]);
-      });
+      setOptionValueInputs(res.data.data.variants.map(variant => ({ value: variant.option_value._id, stock: variant.stock })));
       hideLoader();
     }).catch((err) => {
       errorToast("Có lỗi xảy ra, vui lòng thử lại !");
@@ -43,20 +40,71 @@ const ProductEdit = (props) => {
       console.log(err);
     });
 
-    authorAPI.getAllAuthors().then((res) => {
-      setAuthor(res.data.data);
+    optionValueAPI.all().then((res) => {
+      setOptionValues(res.data);
       hideLoader();
     }).catch((err) => {
       console.log(err);
     });
-
-    companyAPI.getAllCompanies().then((res) => {
-      setCompany(res.data.data);
-      hideLoader();
-    }).catch((err) => {
-      console.log(err);
-    })
   }, [props.match.params.id]);
+
+  const addOptionValueInput = () => {
+    setOptionValueInputs([...optionValueInputs, { value: "", stock: "" }]);
+  };
+
+  const handleOptionValueChange = (index, event) => {
+    const values = [...optionValueInputs];
+    values[index][event.target.name] = event.target.value;
+    setOptionValueInputs(values);
+  };
+
+  const deleteOptionValueInput = (index) => {
+    const values = [...optionValueInputs];
+    values.splice(index, 1);
+    setOptionValueInputs(values);
+  };
+
+  const handleFileInputChange = (e) => {
+    const files = Array.from(e.target.files);
+    setFileNames(files.map(file => file.name));
+    previewFiles(files);
+    updateProductFormik.setFieldValue("inputProductImages", files);
+  };
+
+  const previewFiles = (files) => {
+    const previewSources = files.map(file => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      return new Promise((resolve) => {
+        reader.onloadend = () => {
+          resolve(reader.result);
+        };
+      });
+    });
+
+    Promise.all(previewSources).then(sources => {
+      setPreviewSources(sources);
+    });
+  };
+
+  const deleteCurrentImage = (index) => {
+    const updatedImages = [...updateProductFormik.values.inputProductImages];
+    const deletedImage = updatedImages.splice(index, 1);
+    setDeletedImages([...deletedImages, ...deletedImage]);
+    updateProductFormik.setFieldValue("inputProductImages", updatedImages);
+  };
+
+  const deleteNewImage = (index) => {
+    const updatedPreviewSources = [...previewSources];
+    const updatedFileNames = [...fileNames];
+    updatedPreviewSources.splice(index, 1);
+    updatedFileNames.splice(index, 1);
+    setPreviewSources(updatedPreviewSources);
+    setFileNames(updatedFileNames);
+    const updatedFiles = [...updateProductFormik.values.inputProductImages];
+    updatedFiles.splice(index, 1);
+    updateProductFormik.setFieldValue("inputProductImages", updatedFiles);
+  };
 
   let updateProductFormik = useFormik({
     initialValues: {
@@ -68,10 +116,10 @@ const ProductEdit = (props) => {
       inputProductPromotion: productItem.p_promotion,
       inputProductQuantity: productItem.p_quantity,
       inputProductDatePublic: productItem.p_datepublic,
-      inputProductImage: '',
-      inputAuthorName: authorId,
-      inputCompanyName: productItem.company ? productItem.company._id : '',
-      inputProductDescription: productItem.p_description
+      inputProductImages: productItem.p_images ?? [],
+      inputProductDescription: productItem.p_description,
+      inputRating: productItem.rating || 0,
+      inputNumberOfRating: productItem.number_of_rating || 0
     },
     enableReinitialize: true,
     validationSchema: Yup.object({
@@ -90,10 +138,6 @@ const ProductEdit = (props) => {
       inputProductQuantity: Yup.number()
         .required("Bắt buộc nhập số lượng sản phẩm !")
         .min(0, "Giá tiền lớn hơn 0"),
-      inputAuthorName: Yup.array()
-        .min(1, "Bắt buộc chọn tác giả"),
-      inputCompanyName: Yup.string()
-        .required("Bắt buộc chọn nhà  xuất bản !"),
       inputProductDatePublic: Yup.string()
         .required("Bắt buộc chọn ngày phát hành !")
     }),
@@ -104,14 +148,23 @@ const ProductEdit = (props) => {
       formData.append('p_price', values.inputProductPrice);
       formData.append('p_quantity', values.inputProductQuantity);
       formData.append('p_datepublic', values.inputProductDatePublic);
-      formData.append('p_image_detail', values.inputProductImage);
+      values.inputProductImages.forEach((file) => {
+        formData.append("p_images", file);
+      });
       formData.append('p_description', values.inputProductDescription);
       formData.append('category', values.inputCateName);
-      for (let i = 0; i < values.inputAuthorName.length; i++) {
-        formData.append("author[]", values.inputAuthorName[i]);
-      }
 
-      formData.append("company", values.inputCompanyName);
+      optionValueInputs.forEach((input, index) => {
+        formData.append(`variants[${index}][option_value]`, input.value);
+        formData.append(`variants[${index}][stock]`, input.stock);
+      });
+
+      formData.append('rating', values.inputRating);
+      formData.append('number_of_rating', values.inputNumberOfRating);
+
+      deletedImages.forEach((image) => {
+        formData.append('deleted_images', image._id);
+      });
 
       showLoader();
       productAPI.updateProductById(props.match.params.id, formData).then((res) => {
@@ -146,16 +199,6 @@ const ProductEdit = (props) => {
     }
   });
 
-  let previewFile = (file) => {
-    if (file) {
-      let reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onloadend = () => {
-        setPreviewSource(reader.result);
-      }
-    }
-  }
-
   return (
     <div className="content-wrapper">
       {/* Content Header (Page header) */}
@@ -170,12 +213,12 @@ const ProductEdit = (props) => {
                 <li className="breadcrumb-item">
                   <Link to="/dashboard">
                     Trang chủ
-                                </Link>
+                  </Link>
                 </li>
                 <li className="breadcrumb-item">
                   <Link to="/products">
                     Sản phẩm
-                            </Link>
+                  </Link>
                 </li>
                 <li className="breadcrumb-item active">Cập nhật sản phẩm</li>
               </ol>
@@ -202,18 +245,26 @@ const ProductEdit = (props) => {
                         <div className="form-group">
                           <label htmlFor="inputCateName">Danh mục (*)</label>
                           <select className="form-control"
-                            // value={updateProductFormik.values.inputCateName || ''}
+                            name="inputCateName"
+                            value={updateProductFormik.values.inputCateName}
                             onChange={updateProductFormik.handleChange}
                           >
-                            {
-                              cate.map((v, i) => {
-                                return (
-                                  <option key={i} value={v._id}
-                                    selected={v._id === updateProductFormik.values.inputCateName ? true : false}  > { v.c_name} </option>
-                                )
-                              })
-                            }
+                            <option value="">Chọn danh mục...</option>
+                            {cate.map((value, index) => {
+                              return (
+                                <option key={index} value={value._id}>
+                                  {value.c_name}
+                                </option>
+                              );
+                            })}
                           </select>
+
+                          {updateProductFormik.errors.inputCateName &&
+                            updateProductFormik.touched.inputCateName && (
+                              <small>
+                                {updateProductFormik.errors.inputCateName}
+                              </small>
+                            )}
                         </div>
 
                         <div className="form-group">
@@ -292,17 +343,13 @@ const ProductEdit = (props) => {
                         <div className="row">
                           <div className="col-8">
                             <div className="form-group">
-                              <label htmlFor="inputFile">Hình ảnh mới</label>
+                              <label htmlFor="inputFiles">Hình ảnh mới</label>
                               <div className="input-group">
                                 <div className="custom-file">
-                                  <input type="file" className="custom-file-input" name="inputProductImage"
-                                    onChange={(e) => {
-                                      updateProductFormik.setFieldValue('inputProductImage', e.target.files[0]);
-                                      setFileName(e.target.files[0] ? e.target.files[0].name : 'Chọn ảnh');
-                                      previewFile(e.target.files[0] ? e.target.files[0] : null);
-                                    }}
+                                  <input type="file" className="custom-file-input" name="inputProductImages" multiple
+                                    onChange={handleFileInputChange}
                                   />
-                                  <label className="custom-file-label" htmlFor="inputFile">{fileName}</label>
+                                  <label className="custom-file-label" htmlFor="inputFiles">{fileNames.join(", ") || "Chọn ảnh"}</label>
                                 </div>
                                 <div className="input-group-append">
                                   <span className="input-group-text">Upload</span>
@@ -311,9 +358,24 @@ const ProductEdit = (props) => {
                             </div>
                           </div>
                           <div className="col-4">
-                            {previewSource && (
-                              <img src={previewSource} style={{ height: '100px' }} alt="previewImage" className="img-thumbnail" />
-                            )}
+                            {previewSources.map((source, index) => (
+                              <div key={index} className="position-relative">
+                                <img
+                                  src={source}
+                                  style={{ height: "100px", marginRight: "10px" }}
+                                  alt="previewImage"
+                                  className="img-thumbnail"
+                                />
+                                <button
+                                  type="button"
+                                  className="btn btn-danger position-absolute"
+                                  style={{ top: 0, right: 0 }}
+                                  onClick={() => deleteNewImage(index)}
+                                >
+                                  <i className="fas fa-trash"></i>
+                                </button>
+                              </div>
+                            ))}
                           </div>
                         </div>
 
@@ -321,41 +383,26 @@ const ProductEdit = (props) => {
                           <label htmlFor="currImage">Hình ảnh hiện tại</label>
                           <div className="row">
                             <div className="col-4">
-                              <img src={productItem.p_image_detail ? productItem.p_image_detail.url : ""} className="img-thumbnail" alt="Author" style={{ height: '100px' }} />
+                              {updateProductFormik.values.inputProductImages.map((image, index) => (
+                                <div key={index} className="position-relative">
+                                  <img
+                                    src={image.url}
+                                    className="img-thumbnail"
+                                    alt={`Image_${index}`}
+                                    style={{ height: '100px' }}
+                                  />
+                                  <button
+                                    type="button"
+                                    className="btn btn-danger position-absolute"
+                                    style={{ top: 0, right: 0 }}
+                                    onClick={() => deleteCurrentImage(index)}
+                                  >
+                                    <i className="fas fa-trash"></i>
+                                  </button>
+                                </div>
+                              ))}
                             </div>
                           </div>
-                        </div>
-
-                        <div className="form-group">
-                          <label htmlFor="inputProductAuthor">Tên tác giả (*)</label>
-                          <select className="form-control" name="inputAuthorName" multiple
-                            value={updateProductFormik.values.inputAuthorName || ['']}
-                            onChange={updateProductFormik.handleChange}
-                          >
-                            {
-                              author.map((v, i) => {
-                                return (
-                                  <option key={i} value={v._id} >{v.a_name}</option>
-                                )
-                              })
-                            }
-                          </select>
-                        </div>
-
-                        <div className="form-group">
-                          <label htmlFor="inputCompanyName">Nhà xuất bản (*)</label>
-                          <select className="form-control" name="inputCompanyName"
-                            onChange={updateProductFormik.handleChange}
-                          >
-                            {
-                              productItem.company ? (company.map((v, i) => {
-                                return (
-                                  <option key={i} value={v._id}
-                                    selected={productItem.company._id === v._id ? true : false}  > { v.c_name} </option>
-                                )
-                              })) : ''
-                            }
-                          </select>
                         </div>
 
                         <div className="form-group row">
@@ -377,14 +424,19 @@ const ProductEdit = (props) => {
                               <label htmlFor="noHot"> Không nổi bật </label>
                             </div>
                           </div>
-
-          
                         </div>
-                      </div>
-                    </div>
 
-                    <div className="row">
-                      <div className="col-12">
+                        <div className="form-group row">
+                          <div className="col-6">
+                             <label htmlFor="inputRating">Đánh giá</label>
+                             <input type="number" className="form-control" name="inputRating" placeholder="Nhập đánh giá sản phẩm...." value={updateProductFormik.values.inputRating} onChange={updateProductFormik.handleChange} />
+                          </div>
+                          <div className="col-6">
+                             <label htmlFor="inputNumberOfRating">Số lần</label>
+                              <input type="number" className="form-control" name="inputNumberOfRating" placeholder="Nhập số lần đánh giá sản phẩm...." value={updateProductFormik.values.inputNumberOfRating} onChange={updateProductFormik.handleChange} />
+                          </div>
+                        </div>
+
                         <div className="form-group">
                           <label htmlFor="inputProductDescription">Mô tả sản phẩm</label>
                           <CKEditor
@@ -395,9 +447,51 @@ const ProductEdit = (props) => {
                               updateProductFormik.setFieldValue("inputProductDescription", editor.getData())
                             }}
                           />
-                          {/* {addProductFormik.errors.inputProductDescription && addProductFormik.touched.inputProductDescription && (
-                            <small>{addProductFormik.errors.inputProductDescription}</small>
-                          )} */}
+                        </div>
+
+                        <div className="form-group">
+                          <label htmlFor="optionValues">Biến thể sản phẩm</label>
+                          {optionValueInputs.map((input, index) => (
+                            <div key={index} className="row mb-2">
+                              <div className="col-5">
+                                <select
+                                  className="form-control"
+                                  name="value"
+                                  value={input.value}
+                                  onChange={(event) => handleOptionValueChange(index, event)}
+                                >
+                                  <option value="">Chọn giá trị...</option>
+                                  {optionValues.map((optionValue, idx) => (
+                                    <option key={idx} value={optionValue._id}>
+                                      {optionValue.option.name} : {optionValue.value}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                              <div className="col-5">
+                                <input
+                                  type="number"
+                                  className="form-control"
+                                  name="stock"
+                                  placeholder="Số lượng..."
+                                  value={input.stock}
+                                  onChange={(event) => handleOptionValueChange(index, event)}
+                                />
+                              </div>
+                              <div className="col-2">
+                                <button
+                                  type="button"
+                                  className="btn btn-danger"
+                                  onClick={() => deleteOptionValueInput(index)}
+                                >
+                                  <i className="fas fa-trash"></i>
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                          <button type="button" className="btn btn-primary" onClick={addOptionValueInput}>
+                            <i className="fas fa-plus"></i> Thêm biến thể
+                          </button>
                         </div>
                       </div>
                     </div>
