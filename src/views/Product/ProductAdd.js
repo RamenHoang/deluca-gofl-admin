@@ -19,7 +19,9 @@ const ProductAdd = () => {
   const [previewSources, setPreviewSources] = useState([]);
   const [cate, setCate] = useState([]);
   const [optionValues, setOptionValues] = useState([]);
-  const [optionValueInputs, setOptionValueInputs] = useState([{ value: "", stock: "" }]);
+  const [uniqueOptionNames, setUniqueOptionNames] = useState([]);
+  const [optionValueInputs, setOptionValueInputs] = useState([{ values: [], stock: 0, image: null }]);
+  const [variantImages, setVariantImages] = useState([]);
 
   useEffect(() => {
     showLoader();
@@ -37,6 +39,8 @@ const ProductAdd = () => {
       .all()
       .then((res) => {
         setOptionValues(res.data);
+        const uniqueNames = [...new Set(res.data.map(optionValue => optionValue.option.name))];
+        setUniqueOptionNames(uniqueNames);
         hideLoader();
       })
       .catch((err) => {
@@ -45,12 +49,23 @@ const ProductAdd = () => {
   }, []);
 
   const addOptionValueInput = () => {
-    setOptionValueInputs([...optionValueInputs, { value: "", stock: "" }]);
+    setOptionValueInputs([...optionValueInputs, { values: [], stock: 0, image: null }]);
+    setVariantImages([...variantImages, null]);
   };
 
-  const handleOptionValueChange = (index, event) => {
+  const handleOptionValueChange = (index, event, valueIndex = null) => {
     const values = [...optionValueInputs];
-    values[index][event.target.name] = event.target.value;
+    if (event.target.name === "image") {
+      values[index][event.target.name] = event.target.files[0];
+      const images = [...variantImages];
+      images[index] = event.target.files[0];
+      setVariantImages(images);
+      addProductFormik.setFieldValue("inputVariantImages", images);
+    } else if (valueIndex !== null) {
+      values[index].values[valueIndex] = event.target.value;
+    } else {
+      values[index][event.target.name] = event.target.value;
+    }
     setOptionValueInputs(values);
   };
 
@@ -58,6 +73,9 @@ const ProductAdd = () => {
     const values = [...optionValueInputs];
     values.splice(index, 1);
     setOptionValueInputs(values);
+    const images = [...variantImages];
+    images.splice(index, 1);
+    setVariantImages(images);
   };
 
   let addProductFormik = useFormik({
@@ -69,7 +87,7 @@ const ProductAdd = () => {
       inputProductPrice: "",
       inputProductPromotion: "",
       inputProductQuantity: "",
-      inputProductImages: [],
+      inputVariantImages: [],
       inputAuthorName: [],
       inputCompanyName: "",
       inputProductDescription: "",
@@ -92,7 +110,7 @@ const ProductAdd = () => {
       inputProductQuantity: Yup.number()
         .required("Bắt buộc nhập số lượng sản phẩm !")
         .min(0, "Giá tiền lớn hơn 0"),
-      inputProductImages: Yup.array()
+      inputVariantImages: Yup.array()
         .min(1, "Bắt buộc chọn ít nhất một hình ảnh sản phẩm")
         .test(
           "fileSize",
@@ -120,20 +138,27 @@ const ProductAdd = () => {
       formData.append("p_price", values.inputProductPrice);
       formData.append("p_promotion", values.inputProductPromotion);
       formData.append("p_quantity", values.inputProductQuantity);
-      values.inputProductImages.forEach((file) => {
-        formData.append("p_images", file);
-      });
       formData.append("p_description", values.inputProductDescription);
       formData.append("category", values.inputCateName);
       formData.append("p_datepublic", values.inputProductDatePublic);
 
       optionValueInputs.forEach((input, index) => {
-        if (input.value == "" || input.stock == "") {
+        input.values.forEach((value, valueIndex) => {
+          if (value == "") {
+            return;
+          }
+          formData.append(`variants[${index}][option_values][${valueIndex}]`, value);
+        });
+        if (input.stock == "") {
           return;
         }
-
-        formData.append(`variants[${index}][option_value]`, input.value);
         formData.append(`variants[${index}][stock]`, input.stock);
+      });
+
+      values.inputVariantImages.forEach((image) => {
+        if (image) {
+          formData.append(`variant_images`, image);
+        }
       });
 
       formData.append("rating", values.inputRating);
@@ -382,12 +407,12 @@ const ProductAdd = () => {
                         <div className="form-group row">
                           <label
                             htmlFor="inputProductHot"
-                            className="col-sm-2 col-form-label"
+                            className="col-12 col-form-label"
                           >
                             Nổi bật ?
                           </label>
 
-                          <div className="col-sm-10 mt-2">
+                          <div className="col-12 mt-2">
                             <div className="icheck-primary d-inline mr-3">
                               <input
                                 type="radio"
@@ -428,58 +453,135 @@ const ProductAdd = () => {
 
                         <div className="form-group row">
                           <div className="col-6">
-                             <label htmlFor="inputRating">Đánh giá</label>
-                             <input type="number" className="form-control" name="inputRating" placeholder="Nhập đánh giá sản phẩm...." value={addProductFormik.values.inputRating} onChange={addProductFormik.handleChange} />
+                            <label htmlFor="inputRating">Đánh giá</label>
+                            <input type="number" className="form-control" name="inputRating" placeholder="Nhập đánh giá sản phẩm...." value={addProductFormik.values.inputRating} onChange={addProductFormik.handleChange} />
                           </div>
                           <div className="col-6">
-                             <label htmlFor="inputNumberOfRating">Số lần</label>
-                              <input type="number" className="form-control" name="inputNumberOfRating" placeholder="Nhập số lần đánh giá sản phẩm...." value={addProductFormik.values.inputNumberOfRating} onChange={addProductFormik.handleChange} />
+                            <label htmlFor="inputNumberOfRating">Số lần</label>
+                            <input type="number" className="form-control" name="inputNumberOfRating" placeholder="Nhập số lần đánh giá sản phẩm...." value={addProductFormik.values.inputNumberOfRating} onChange={addProductFormik.handleChange} />
                           </div>
                         </div>
 
-                        <div className="form-group">
-                          <label htmlFor="inputFiles">Hình ảnh (*)</label>
-                          <div className="input-group">
+                        <div className="row form-group">
+                          <label htmlFor="optionValues" className="col-12">Biến thể sản phẩm</label>
+                          {optionValueInputs.map((input, index) => (
+                            <div key={index} className="row form-group col-12 mb-2" style={{ border: "1px solid #ccc", padding: "5px 0px", marginLeft: "5px" }}>
+                              <div key={index} className="mb-2 col-6">
+                                {uniqueOptionNames.map((optionName, idx) => (
+                                  <div className="row form-group" key={idx}>
+                                    <label key={idx} className="col-6">
+                                      {optionName}
+                                    </label>
+                                    <select
+                                      className="form-control col-6"
+                                      name={`value${idx}`}
+                                      value={input.values[idx]}
+                                      onChange={(event) => handleOptionValueChange(index, event, idx)}
+                                    >
+                                      <option value="">Chọn giá trị...</option>
+                                      {optionValues
+                                        .filter(optionValue => optionValue.option.name === optionName)
+                                        .map((optionValue, idx) => (
+                                          <option key={idx} value={optionValue._id}>
+                                            {optionValue.value}
+                                          </option>
+                                        ))}
+                                    </select>
+                                  </div>
+                                ))}
+                                <div className="row form-group">
+                                  <label className="col-6">Số lượng</label>
+                                  <input
+                                    type="number"
+                                    className="form-control col-6"
+                                    name="stock"
+                                    placeholder="Số lượng..."
+                                    value={input.stock}
+                                    onChange={(event) => handleOptionValueChange(index, event)}
+                                  />
+                                </div>
+                                <div className="row form-group">
+                                  <label className="col-6">Hình ảnh</label>
+                                  <input
+                                    type="file"
+                                    className="form-control col-6"
+                                    name="image"
+                                    onChange={(event) => handleOptionValueChange(index, event)}
+                                  />
+                                </div>
+                                <div className="col-2">
+                                  <button
+                                    type="button"
+                                    className="btn btn-danger"
+                                    onClick={() => deleteOptionValueInput(index)}
+                                  >
+                                    <i className="fas fa-trash"></i>
+                                  </button>
+                                </div>
+                              </div>
+                              <div key={index} className="mb-2 col-6">
+                                {variantImages[index] && (
+                                  <img
+                                    src={URL.createObjectURL(variantImages[index])}
+                                    style={{ height: "150px", marginRight: "10px" }}
+                                    alt={`previewImage-${index}`}
+                                  />
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                          <button
+                            type="button"
+                            className="btn btn-primary"
+                            onClick={addOptionValueInput}
+                          >
+                            <i className="fas fa-plus"></i> Thêm biến thể
+                          </button>
+                        </div>
+
+                        {/* <div className="form-group">
+                            <label htmlFor="inputFiles">Hình ảnh (*)</label>
+                            <div className="input-group">
                             <div className="custom-file">
                               <input
-                                type="file"
-                                className="custom-file-input"
-                                name="inputProductImages"
-                                multiple
-                                onChange={(e) => {
-                                  addProductFormik.setFieldValue(
-                                    "inputProductImages",
-                                    Array.from(e.target.files)
-                                  );
-                                  setFileNames(
-                                    Array.from(e.target.files).map(file => file.name)
-                                  );
-                                  previewFiles(
-                                    Array.from(e.target.files)
-                                  );
-                                }}
+                              type="file"
+                              className="custom-file-input"
+                              name="inputProductImages"
+                              multiple
+                              onChange={(e) => {
+                                addProductFormik.setFieldValue(
+                                "inputProductImages",
+                                Array.from(e.target.files)
+                                );
+                                setFileNames(
+                                Array.from(e.target.files).map(file => file.name)
+                                );
+                                previewFiles(
+                                Array.from(e.target.files)
+                                );
+                              }}
                               />
                               <label
-                                className="custom-file-label"
-                                htmlFor="inputFile"
+                              className="custom-file-label"
+                              htmlFor="inputFile"
                               >
-                                {fileNames.join(", ")}
+                              {fileNames.join(", ")}
                               </label>
                             </div>
                             <div className="input-group-append">
                               <span className="input-group-text">Upload</span>
                             </div>
-                          </div>
+                            </div>
 
-                          {addProductFormik.errors.inputProductImages &&
+                            {addProductFormik.errors.inputProductImages &&
                             addProductFormik.touched.inputProductImages && (
                               <small>
-                                {addProductFormik.errors.inputProductImages}
+                              {addProductFormik.errors.inputProductImages}
                               </small>
                             )}
-                        </div>
+                          </div> */}
 
-                        <div>
+                        {/* <div>
                           {previewSources.map((source, index) => (
                             <img
                               key={index}
@@ -488,7 +590,7 @@ const ProductAdd = () => {
                               alt={`previewImage-${index}`}
                             />
                           ))}
-                        </div>
+                        </div> */}
                       </div>
                     </div>
 
@@ -521,59 +623,6 @@ const ProductAdd = () => {
                                 }
                               </small>
                             )}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="row">
-                      <div className="col-12">
-                        <div className="form-group">
-                          <label htmlFor="optionValues">Biến thể sản phẩm</label>
-                          {optionValueInputs.map((input, index) => (
-                            <div key={index} className="row mb-2">
-                              <div className="col-5">
-                                <select
-                                  className="form-control"
-                                  name="value"
-                                  value={input.value}
-                                  onChange={(event) => handleOptionValueChange(index, event)}
-                                >
-                                  <option value="">Chọn giá trị...</option>
-                                  {optionValues.map((optionValue, idx) => (
-                                    <option key={idx} value={optionValue._id}>
-                                      {optionValue.option.name} : {optionValue.value}
-                                    </option>
-                                  ))}
-                                </select>
-                              </div>
-                              <div className="col-5">
-                                <input
-                                  type="number"
-                                  className="form-control"
-                                  name="stock"
-                                  placeholder="Số lượng..."
-                                  value={input.stock}
-                                  onChange={(event) => handleOptionValueChange(index, event)}
-                                />
-                              </div>
-                              <div className="col-2">
-                                <button
-                                  type="button"
-                                  className="btn btn-danger"
-                                  onClick={() => deleteOptionValueInput(index)}
-                                >
-                                  <i className="fas fa-trash"></i>
-                                </button>
-                              </div>
-                            </div>
-                          ))}
-                          <button
-                            type="button"
-                            className="btn btn-primary"
-                            onClick={addOptionValueInput}
-                          >
-                            <i className="fas fa-plus"></i> Thêm biến thể
-                          </button>
                         </div>
                       </div>
                     </div>
