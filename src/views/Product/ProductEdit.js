@@ -135,10 +135,12 @@ const ProductEdit = (props) => {
       formData.append('p_name', values.inputProductName);
       formData.append('p_code', values.inputProductCode);
       formData.append('p_price', values.inputProductPrice);
+      formData.append('p_promotion', values.inputProductPromotion);
       formData.append('p_quantity', values.inputProductQuantity);
       formData.append('p_datepublic', values.inputProductDatePublic);
       formData.append('p_description', values.inputProductDescription);
       formData.append('category', values.inputCateName);
+      formData.append('p_hot', values.inputProductHot);
 
       optionValueInputs.forEach((input, index) => {
         if (input._id) {
