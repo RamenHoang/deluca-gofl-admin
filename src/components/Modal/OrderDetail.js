@@ -38,9 +38,9 @@ const OrderDetail = (props) => {
                       <tr key={i}>
                         <td> { i } </td>
                         <td> { v.product.p_code }</td>
-                        <td> { v.product.p_name } </td>
+                        <td> {v.product.p_name} / {v.variant.option_values[0].value} / {v.variant.option_values[1].value}</td>
                         <td> 
-                          <img src={v.product.p_image_detail.url} alt="product-detail" style={{ height: '50px' }} />  
+                          <img src={v.variant.image.url} alt="product-detail" style={{ height: '50px' }} />  
                         </td>
                         <td> { v.product.p_price } VNĐ</td>
                         <td> { v.quantity }</td>
