@@ -311,7 +311,7 @@ const Dashboard = () => {
                               <td>{v.productDetail[0]?.p_name}</td>
                               <td>
                                 <img
-                                  src={v.productDetail[0]?.p_image_detail.url}
+                                  src={v.productDetail[0]?.variants[0].image.url}
                                   alt="product best seller"
                                   style={{ width: "50px" }}
                                 />

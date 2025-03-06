@@ -122,21 +122,21 @@ const Invoice = (props) => {
                             <tr key={i}>
                               <td className="center">{i + 1}</td>
                               <td className="left strong">
-                                {v.product.p_name}
+                                {v.product.p_name} / {v.variant.option_values[0].value} / {v.variant.option_values[1].value}
                               </td>
                               <td className="left">
                                 <img
-                                  src={v.product.p_image_detail.url}
+                                  src={v.variant.image.url}
                                   style={{ height: "50px" }}
                                   alt="description product"
                                 />
                               </td>
                               <td className="right">
-                                {formatCurrency(v.product.p_price)} đ
+                                {formatCurrency(v.price)} đ
                               </td>
                               <td className="center">{v.quantity}</td>
                               <td className="right">
-                                {formatCurrency(v.price)} đ
+                                {formatCurrency(v.quantity * v.price)} đ
                               </td>
                             </tr>
                           );
@@ -160,14 +160,14 @@ const Invoice = (props) => {
                               đ
                             </td>
                           </tr>
-                          <tr>
+                          {/* <tr>
                             <td className="left">
                               <strong className="text-dark">
                                 Giảm giá (0%)
                               </strong>
                             </td>
                             <td className="right">0.00 đ</td>
-                          </tr>
+                          </tr> */}
                           <tr>
                             <td className="left">
                               <strong className="text-dark">
