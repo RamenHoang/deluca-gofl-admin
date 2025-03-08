@@ -36,7 +36,7 @@ const Sidebar = (props) => {
           className="brand-image img-circle elevation-3"
           style={{ opacity: ".8" }}
         />
-        <span className="brand-text font-weight-light">TextBook.xyz</span>
+        <span className="brand-text font-weight-light">DELUCA.VN</span>
       </Link>
 
       {/* Sidebar */}

@@ -74,7 +74,7 @@ const Start = () => {
           <div className="card card-outline card-primary">
             <div className="card-header text-center">
               <a href="/" className="h1">
-                <b>Textbook</b>.xyz
+                DELUCA.VN
               </a>
             </div>
             <div className="card-body">

@@ -73,7 +73,7 @@ const Invoice = (props) => {
                     href="http://localhost:3000"
                     data-abc="true"
                   >
-                    TextBook.com
+                    DELUCA.VN
                   </a>
                   <div className="float-right">
                     <h3 className="mb-0">Hoá đơn #{order.o_code}</h3>
@@ -88,7 +88,7 @@ const Invoice = (props) => {
                   <div className="row mb-4">
                     <div className="col-sm-6">
                       <h5 className="mb-3">Chuyển từ:</h5>
-                      <h3 className="text-dark mb-1">Shop TextBook</h3>
+                      <h3 className="text-dark mb-1">DELUCA.VN</h3>
                       <div>
                         Địa chỉ: Số 1, Đại Cồ Việt, Quận Hai Bà Trưng, TP.Hà Nội
                       </div>
