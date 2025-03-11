@@ -136,7 +136,7 @@ const Sidebar = (props) => {
 
             <li className="nav-header">Đối tác</li>
 
-            <li className="nav-item">
+            {/* <li className="nav-item">
               <NavLink
                 to="/authors"
                 className="nav-link"
@@ -156,7 +156,7 @@ const Sidebar = (props) => {
                 <i className="nav-icon fas fa-warehouse"></i>
                 <p> Nhà xuất bản </p>
               </NavLink>
-            </li>
+            </li> */}
 
             <li className="nav-item">
               <NavLink

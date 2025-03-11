@@ -122,7 +122,7 @@ const Invoice = (props) => {
                             <tr key={i}>
                               <td className="center">{i + 1}</td>
                               <td className="left strong">
-                                {v.product.p_name} / {v.variant.option_values[0].value} / {v.variant.option_values[1].value}
+                                {v.product ? `${v.product.p_name} / ${v.variant ? v.variant.option_values[0].value : 'N/A'} / ${v.variant ? v.variant.option_values[1].value : 'N/A'}` : "N/A"}
                               </td>
                               <td className="left">
                                 <img

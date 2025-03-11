@@ -70,7 +70,7 @@ const Comment = () => {
                       <tr>
                         <th>STT</th>
                         <th>Khách hàng</th>
-                        <th>Sách</th>
+                        <th>Sản phẩm</th>
                         <th>Nội dung</th>
                         <th>Số sao</th>
                         <th>Hành động</th>
@@ -104,7 +104,7 @@ const Comment = () => {
                       <tr>
                         <th>STT</th>
                         <th>Khách hàng</th>
-                        <th>Sách</th>
+                        <th>Sản phẩm</th>
                         <th>Nội dung</th>
                         <th>Số sao</th>
                         <th>Hành động</th>
