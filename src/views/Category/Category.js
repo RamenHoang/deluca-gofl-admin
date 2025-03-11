@@ -45,6 +45,36 @@ const Category = () => {
     })
   }
 
+  const handleEditOrder = (id, newOrder) => {
+    showLoader();
+    categoryAPI.updateCateById(id, { order: newOrder }).then((res) => {
+      if (res.data.message === 'SUCCESS') {
+        let updatedDataCate = dataCate.map(value => {
+          if (value._id === id) {
+            value.order = newOrder;
+          }
+          return value;
+        });
+        updatedDataCate = updatedDataCate.sort((a, b) => {
+          if (a.order > b.order) return 1;
+          if (a.order < b.order) return -1;
+          if (a.createdAt > b.createdAt) return 1;
+          if (a.createdAt < b.createdAt) return -1;
+          return 0;
+        });
+        setDataCate(updatedDataCate);
+        hideLoader();
+        successToast('Cập nhật số thứ tự thành công !');
+      } else {
+        hideLoader();
+        errorToast('Có lỗi xảy ra, vui lòng thử lại');
+      }
+    }).catch((err) => {
+      hideLoader();
+      errorToast('Có lỗi xảy ra, vui lòng thử lại');
+    });
+  };
+
   return (
     <div className="content-wrapper">
       {/* Content Header (Page header) */}
@@ -112,7 +142,15 @@ const Category = () => {
                         .map((v, i) => {
                           return (
                             <tr key={i}>
-                              <td>{i}</td>
+                              <td>
+                                <input 
+                                  type="number" 
+                                  value={v.order || 0} 
+                                  onChange={(e) => handleEditOrder(v._id, e.target.value)} 
+                                  className="form-control" 
+                                  style={{ width: '60px', display: 'inline-block' }}
+                                />
+                              </td>
                               <td>{v.c_name}</td>
                               <td>
                                 {
