@@ -38,9 +38,9 @@ const OrderDetail = (props) => {
                       <tr key={i}>
                         <td> { i } </td>
                         <td> { v.product ? v.product.p_code : 'N/A' }</td>
-                        <td> {v.product ? `${v.product.p_name} / ${v.variant.option_values[0].value} / ${v.variant.option_values[1].value}` : 'N/A'}</td>
+                        <td> {v.product ? `${v.product.p_name} / ${v.variant.color.name} / ${v.size.name}` : 'N/A'}</td>
                         <td> 
-                          <img src={v.variant ? v.variant.image.url : ''} alt="product-detail" style={{ height: '50px' }} />  
+                          <img src={v.variant ? v.variant.images[0].url : ''} alt="product-detail" style={{ height: '50px' }} />  
                         </td>
                         <td> { v.product ? v.product.p_price : 'N/A' } VNĐ</td>
                         <td> { v.quantity }</td>
