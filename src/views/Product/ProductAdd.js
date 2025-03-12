@@ -6,22 +6,19 @@ import { useFormik } from "formik";
 import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
 import { CKEditor } from "@ckeditor/ckeditor5-react";
 import categoryAPI from "./../../apis/categoryAPI";
-import optionValueAPI from "./../../apis/optionValueAPI";
+import colorAPI from "./../../apis/colorAPI";
+import sizeAPI from "./../../apis/sizeAPI";
 import productAPI from "./../../apis/productAPI";
-import { FILE_SIZE, SUPPORTED_FORMATS } from "./../../constants/constants";
 import { errorToast, successToast } from "../../components/Toasts/Toasts";
 import useFullPageLoader from "./../../hooks/useFullPageLoader";
 
 const ProductAdd = () => {
   const [loader, showLoader, hideLoader] = useFullPageLoader();
   const history = useHistory();
-  const [fileNames, setFileNames] = useState(["Chọn ảnh"]);
-  const [previewSources, setPreviewSources] = useState([]);
   const [cate, setCate] = useState([]);
-  const [optionValues, setOptionValues] = useState([]);
-  const [uniqueOptionNames, setUniqueOptionNames] = useState([]);
-  const [optionValueInputs, setOptionValueInputs] = useState([{ values: [], stock: 0, image: null }]);
-  const [variantImages, setVariantImages] = useState([]);
+  const [optionValueInputs, setOptionValueInputs] = useState([{ color: null, sizes: [], images: [] }]);
+  const [colors, setColors] = useState([]);
+  const [sizes, setSizes] = useState([]);
 
   useEffect(() => {
     showLoader();
@@ -35,12 +32,20 @@ const ProductAdd = () => {
         console.log(err);
       });
 
-    optionValueAPI
-      .all()
+    colorAPI
+      .getAll()
       .then((res) => {
-        setOptionValues(res.data);
-        const uniqueNames = [...new Set(res.data.map(optionValue => optionValue.option.name))];
-        setUniqueOptionNames(uniqueNames);
+        setColors(res.data);
+        hideLoader();
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+
+    sizeAPI
+      .getAll()
+      .then((res) => {
+        setSizes(res.data);
         hideLoader();
       })
       .catch((err) => {
@@ -49,34 +54,52 @@ const ProductAdd = () => {
   }, []);
 
   const addOptionValueInput = () => {
-    setOptionValueInputs([...optionValueInputs, { values: [], stock: 0, image: null }]);
-    setVariantImages([...variantImages, null]);
-  };
-
-  const handleOptionValueChange = (index, event, valueIndex = null) => {
-    const values = [...optionValueInputs];
-    if (event.target.name === "image") {
-      values[index][event.target.name] = event.target.files[0];
-      const images = [...variantImages];
-      images[index] = event.target.files[0];
-      setVariantImages(images);
-      addProductFormik.setFieldValue("inputVariantImages", images);
-    } else if (valueIndex !== null) {
-      values[index].values[valueIndex] = event.target.value;
-    } else {
-      values[index][event.target.name] = event.target.value;
-    }
-    setOptionValueInputs(values);
+    setOptionValueInputs([...optionValueInputs, { color: null, sizes: [], images: [] }]);
   };
 
   const deleteOptionValueInput = (index) => {
     const values = [...optionValueInputs];
     values.splice(index, 1);
     setOptionValueInputs(values);
-    const images = [...variantImages];
-    images.splice(index, 1);
-    setVariantImages(images);
   };
+
+  const handleColorChange = (index, event) => {
+    const values = [...optionValueInputs];
+    values[index].color = colors.find(color => color._id === event.target.value)._id;
+    setOptionValueInputs(values);
+    console.log(optionValueInputs);
+  }
+
+  const handleSizeChange = (index, sizeIndex, event) => {
+    const values = [...optionValueInputs];
+    values[index].sizes[sizeIndex] = { size: sizes[sizeIndex]._id, stock: event.target.value };
+    setOptionValueInputs(values);
+    console.log(optionValueInputs);
+  }
+
+  const handleImagesChange = (index, event) => {
+    const values = [...optionValueInputs];
+    const files = event.target.files;
+
+    showLoader();
+    let formData = new FormData();
+    Array.from(files).forEach((file) => {
+      formData.append("variant_images", file);
+    });
+
+    productAPI
+      .uploadImages(formData)
+      .then((res) => {
+        values[index].images = res.data.images;
+        setOptionValueInputs(values);
+        console.log(optionValueInputs);
+        hideLoader();
+      })
+      .catch((err) => {
+        hideLoader();
+        console.log(err);
+      });
+  }
 
   let addProductFormik = useFormik({
     initialValues: {
@@ -86,8 +109,6 @@ const ProductAdd = () => {
       inputProductHot: "false",
       inputProductPrice: "",
       inputProductPromotion: "",
-      inputProductQuantity: "",
-      inputVariantImages: [],
       inputAuthorName: [],
       inputCompanyName: "",
       inputProductDescription: "",
@@ -107,62 +128,30 @@ const ProductAdd = () => {
       inputProductPrice: Yup.number()
         .required("Bắt buộc  nhập giá sản phẩm !")
         .min(0, "Giá tiền lớn hơn 0"),
-      inputProductQuantity: Yup.number()
-        .required("Bắt buộc nhập số lượng sản phẩm !")
-        .min(0, "Giá tiền lớn hơn 0"),
-      inputVariantImages: Yup.array()
-        .min(1, "Bắt buộc chọn ít nhất một hình ảnh sản phẩm")
-        .test(
-          "fileSize",
-          "Kích thước file lớn, vui lòng chọn file khác nhỏ hơn 200 KB có định dạng là ảnh",
-          (value) => {
-            return value.every(file => file.size <= FILE_SIZE);
-          }
-        )
-        .test(
-          "fileFormat",
-          "Không hỗ trợ loại file này, lòng chọn file ảnh",
-          (value) => {
-            return value.every(file => SUPPORTED_FORMATS.includes(file.type));
-          }
-        ),
       inputProductDatePublic: Yup.string().required(
         "Bắt buộc chọn ngày phát hành !"
       ),
     }),
     onSubmit: (values) => {
-      let formData = new FormData();
-      formData.append("p_name", values.inputProductName);
-      formData.append("p_code", values.inputProductCode);
-      formData.append("p_hot", values.inputProductHot);
-      formData.append("p_price", values.inputProductPrice);
-      formData.append("p_promotion", values.inputProductPromotion);
-      formData.append("p_quantity", values.inputProductQuantity);
-      formData.append("p_description", values.inputProductDescription);
-      formData.append("category", values.inputCateName);
-      formData.append("p_datepublic", values.inputProductDatePublic);
-
-      optionValueInputs.forEach((input, index) => {
-        input.values.forEach((value, valueIndex) => {
-          if (value == "") {
-            return;
+      let formData = {
+        "p_name": values.inputProductName,
+        "p_code": values.inputProductCode,
+        "p_hot": values.inputProductHot,
+        "p_price": values.inputProductPrice,
+        "p_promotion": values.inputProductPromotion,
+        "p_description": values.inputProductDescription,
+        "category": values.inputCateName,
+        "p_datepublic": values.inputProductDatePublic,
+        "rating": values.inputRating,
+        "number_of_rating": values.inputNumberOfRating,
+        "variants": optionValueInputs.map((value) => {
+          return {
+            color: value.color,
+            sizes: value.sizes,
+            images: value.images.map(image => image._id)
           }
-          formData.append(`variants[${index}][option_values][${valueIndex}]`, value);
-        });
-        if (input.stock == "") {
-          return;
-        }
-        formData.append(`variants[${index}][stock]`, input.stock);
-      });
-
-      values.inputVariantImages.forEach((image) => {
-        if (image) {
-          formData.append(`variant_images`, image);
-        }
-      });
-
-      formData.append("rating", values.inputRating);
-      formData.append("number_of_rating", values.inputNumberOfRating);
+        })
+      };
 
       showLoader();
       productAPI
@@ -190,22 +179,6 @@ const ProductAdd = () => {
         });
     },
   });
-
-  let previewFiles = (files) => {
-    const fileReaders = [];
-    const sources = [];
-    files.forEach((file, index) => {
-      let reader = new FileReader();
-      fileReaders.push(reader);
-      reader.readAsDataURL(file);
-      reader.onloadend = () => {
-        sources.push(reader.result);
-        if (sources.length === files.length) {
-          setPreviewSources(sources);
-        }
-      };
-    });
-  };
 
   return (
     <div className="content-wrapper">
@@ -257,7 +230,7 @@ const ProductAdd = () => {
                             <option value="">Chọn danh mục...</option>
                             {cate.map((value, index) => {
                               return (
-                                <option key={index} value={value._id}>
+                                <option value={value._id}>
                                   {value.c_name}
                                 </option>
                               );
@@ -313,7 +286,7 @@ const ProductAdd = () => {
                         </div>
                         <div className="form-group">
                           <label htmlFor="inputProductPrice">
-                            Giá bìa sản phẩm (*)
+                            Giá gốc (*)
                           </label>
                           <input
                             type="number"
@@ -331,7 +304,9 @@ const ProductAdd = () => {
                               </small>
                             )}
                         </div>
+                      </div>
 
+                      <div className="col-6 col-sm-6">
                         <div className="form-group">
                           <label htmlFor="inputProductPromotion">
                             Giá khuyến mại{" "}
@@ -351,26 +326,6 @@ const ProductAdd = () => {
                             addProductFormik.touched.inputProductPromotion && (
                               <small>
                                 {addProductFormik.errors.inputProductPromotion}
-                              </small>
-                            )}
-                        </div>
-                        <div className="form-group">
-                          <label htmlFor="inputProductQuantity">
-                            Số lượng sản phẩm (*)
-                          </label>
-                          <input
-                            type="number"
-                            className="form-control"
-                            name="inputProductQuantity"
-                            placeholder="Số lượng sản phẩm...."
-                            value={addProductFormik.values.inputProductQuantity}
-                            onChange={addProductFormik.handleChange}
-                          />
-
-                          {addProductFormik.errors.inputProductQuantity &&
-                            addProductFormik.touched.inputProductQuantity && (
-                              <small>
-                                {addProductFormik.errors.inputProductQuantity}
                               </small>
                             )}
                         </div>
@@ -401,9 +356,7 @@ const ProductAdd = () => {
                               </small>
                             )}
                         </div>
-                      </div>
 
-                      <div className="col-6 col-sm-6">
                         <div className="form-group row">
                           <label
                             htmlFor="inputProductHot"
@@ -460,83 +413,6 @@ const ProductAdd = () => {
                             <label htmlFor="inputNumberOfRating">Số lần</label>
                             <input type="number" className="form-control" name="inputNumberOfRating" placeholder="Nhập số lần đánh giá sản phẩm...." value={addProductFormik.values.inputNumberOfRating} onChange={addProductFormik.handleChange} />
                           </div>
-                        </div>
-
-                        <div className="row form-group">
-                          <label htmlFor="optionValues" className="col-12">Biến thể sản phẩm</label>
-                          {optionValueInputs.map((input, index) => (
-                            <div key={index} className="row form-group col-12 mb-2" style={{ border: "1px solid #ccc", padding: "5px 0px", marginLeft: "5px" }}>
-                              <div key={index} className="mb-2 col-6">
-                                {uniqueOptionNames.map((optionName, idx) => (
-                                  <div className="row form-group" key={idx}>
-                                    <label key={idx} className="col-6">
-                                      {optionName}
-                                    </label>
-                                    <select
-                                      className="form-control col-6"
-                                      name={`value${idx}`}
-                                      value={input.values[idx]}
-                                      onChange={(event) => handleOptionValueChange(index, event, idx)}
-                                    >
-                                      <option value="">Chọn giá trị...</option>
-                                      {optionValues
-                                        .filter(optionValue => optionValue.option.name === optionName)
-                                        .map((optionValue, idx) => (
-                                          <option key={idx} value={optionValue._id}>
-                                            {optionValue.value}
-                                          </option>
-                                        ))}
-                                    </select>
-                                  </div>
-                                ))}
-                                <div className="row form-group">
-                                  <label className="col-6">Số lượng</label>
-                                  <input
-                                    type="number"
-                                    className="form-control col-6"
-                                    name="stock"
-                                    placeholder="Số lượng..."
-                                    value={input.stock}
-                                    onChange={(event) => handleOptionValueChange(index, event)}
-                                  />
-                                </div>
-                                <div className="row form-group">
-                                  <label className="col-6">Hình ảnh</label>
-                                  <input
-                                    type="file"
-                                    className="form-control col-6"
-                                    name="image"
-                                    onChange={(event) => handleOptionValueChange(index, event)}
-                                  />
-                                </div>
-                                <div className="col-2">
-                                  <button
-                                    type="button"
-                                    className="btn btn-danger"
-                                    onClick={() => deleteOptionValueInput(index)}
-                                  >
-                                    <i className="fas fa-trash"></i>
-                                  </button>
-                                </div>
-                              </div>
-                              <div key={index} className="mb-2 col-6">
-                                {variantImages[index] && (
-                                  <img
-                                    src={URL.createObjectURL(variantImages[index])}
-                                    style={{ height: "150px", marginRight: "10px" }}
-                                    alt={`previewImage-${index}`}
-                                  />
-                                )}
-                              </div>
-                            </div>
-                          ))}
-                          <button
-                            type="button"
-                            className="btn btn-primary"
-                            onClick={addOptionValueInput}
-                          >
-                            <i className="fas fa-plus"></i> Thêm biến thể
-                          </button>
                         </div>
 
                         {/* <div className="form-group">
@@ -625,6 +501,95 @@ const ProductAdd = () => {
                             )}
                         </div>
                       </div>
+                    </div>
+
+                    <div className="row form-group">
+                      <label htmlFor="optionValues" className="col-12">Biến thể sản phẩm</label>
+                      {optionValueInputs.map((input, index) => (
+                        <div className="row form-group col-12 mb-2" style={{ border: "1px solid #ccc", padding: "5px 0px", marginLeft: "5px" }}>
+                          <div className="mb-2 col-4">
+                            <div className="form-group d-flex">
+                              <label className="col-6">
+                                Màu sắc
+                              </label>
+                              <div className="col-6">
+                                <select
+                                  className="form-control"
+                                  value={input.color?._id}
+                                  name={`color-${index}`}
+                                  onChange={(event) => handleColorChange(index, event)}
+                                >
+                                  <option value="">Chọn giá trị...</option>
+                                  {colors.map((color, idx) => (
+                                    <option value={color._id}>
+                                      {color.name}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                            </div>
+                            <div className="form-group">
+                              <label className="col-12">
+                                Kích thước
+                              </label>
+                              <div className="col-12">
+                                {sizes.map((size, idx) => (
+                                  <div className="form-group row">
+                                    <div className="col-6">{size.name}</div>
+                                    <div className="col-6">
+                                      <input
+                                        type="number"
+                                        className="form-control"
+                                        name={`size-${index}-${idx}`}
+                                        placeholder="Số lượng..."
+                                        value={input.sizes[idx]?.stock}
+                                        onChange={(event) => handleSizeChange(index, idx, event)}
+                                      />
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                            <div className="form-group d-flex">
+                              <label className="col-6">Hình ảnh</label>
+                              <div className="col-6">
+                                <input
+                                  type="file"
+                                  className="form-control"
+                                  name={`images-${index}`}
+                                  multiple
+                                  onChange={(event) => handleImagesChange(index, event)}
+                                />
+                              </div>
+                            </div>
+                            <div className="col-2">
+                              <button
+                                type="button"
+                                className="btn btn-danger"
+                                onClick={() => deleteOptionValueInput(index)}
+                              >
+                                <i className="fas fa-trash"></i>
+                              </button>
+                            </div>
+                          </div>
+                          <div className="mb-2 col-8">
+                            {input.images.map((image, idx) => (
+                              <img
+                                src={image.url}
+                                style={{ height: "150px", marginRight: "10px" }}
+                                alt={`previewImage-${index}-${idx}`}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                      <button
+                        type="button"
+                        className="btn btn-primary"
+                        onClick={addOptionValueInput}
+                      >
+                        <i className="fas fa-plus"></i> Thêm biến thể
+                      </button>
                     </div>
 
                     <div className="card-footer">

@@ -122,11 +122,11 @@ const Invoice = (props) => {
                             <tr key={i}>
                               <td className="center">{i + 1}</td>
                               <td className="left strong">
-                                {v.product ? `${v.product.p_name} / ${v.variant ? v.variant.option_values[0].value : 'N/A'} / ${v.variant ? v.variant.option_values[1].value : 'N/A'}` : "N/A"}
+                                {v.product ? `${v.product.p_name} / ${v.variant ? v.variant.color.name : 'N/A'} / ${v.size ? v.size.name : 'N/A'}` : "N/A"}
                               </td>
                               <td className="left">
                                 <img
-                                  src={v.variant.image.url}
+                                  src={v.variant.images[0].url}
                                   style={{ height: "50px" }}
                                   alt="description product"
                                 />

@@ -298,7 +298,6 @@ const Dashboard = () => {
                       <tr>
                         <th>STT</th>
                         <th>Tên sản phẩm</th>
-                        <th>Hình ảnh</th>
                         <th>Đã bán</th>
                       </tr>
                     </thead>
@@ -309,13 +308,6 @@ const Dashboard = () => {
                             <tr key={i}>
                               <td>{i}</td>
                               <td>{v.productDetail[0]?.p_name}</td>
-                              <td>
-                                <img
-                                  src={v.productDetail[0]?.variants[0].image.url}
-                                  alt="product best seller"
-                                  style={{ width: "50px" }}
-                                />
-                              </td>
                               <td>{v.quantity}</td>
                             </tr>
                           );

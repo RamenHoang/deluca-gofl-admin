@@ -31,6 +31,8 @@ import BannerEdit from "./views/Banner/BannerEdit";
 import Order from "./views/Order/Order";
 import NotFound from "./views/NotFound/NotFound";
 import Invoice from "./views/Invoice/Invoice";
+import Color from "./views/Color/Color";
+import Size from "./views/Size/Size";
 import { ToastProvider } from "./components/Toasts/Toasts";
 
 const hist = createBrowserHistory();
@@ -69,6 +71,18 @@ const App = () => {
           exact
           path="/categories/edit/:id"
           component={CategoryEdit}
+          layout={Admin}
+        />
+        <PrivateRoute
+          exact
+          path="/colors"
+          component={Color}
+          layout={Admin}
+        />
+        <PrivateRoute
+          exact
+          path="/sizes"
+          component={Size}
           layout={Admin}
         />
         <PrivateRoute

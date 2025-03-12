@@ -29,6 +29,11 @@ const productAPI = {
     changeProductHotById: (id, data) => {
         let url = `/products/change-product-hot/${id}`;
         return axiosClient.put(url, data);
+    },
+
+    uploadImages: (data) => {
+        let url = '/products/upload';
+        return axiosClient.post(url, data);
     }
 }
 
