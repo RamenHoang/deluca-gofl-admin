@@ -20,6 +20,7 @@ const ProductEdit = (props) => {
   const [optionValueInputs, setOptionValueInputs] = useState([{ color: null, sizes: [], images: [] }]);
   const [colors, setColors] = useState([]);
   const [sizes, setSizes] = useState([]);
+  const [sizeChart, setSizeChart] = useState(null);
 
   useEffect(() => {
     let id = props.match.params.id;
@@ -27,6 +28,7 @@ const ProductEdit = (props) => {
     productAPI.getProductById(id).then((res) => {
       setProductItem(res.data.data);
       setOptionValueInputs(res.data.data.variants);
+      setSizeChart(res.data.data.sizeChart);
       hideLoader();
     }).catch((err) => {
       errorToast("Có lỗi xảy ra, vui lòng thử lại !");
@@ -114,6 +116,25 @@ const ProductEdit = (props) => {
       });
   }
 
+  const handleUploadSizeChart = (event) => {
+    showLoader();
+    let formData = new FormData();
+    Array.from(event.target.files).forEach((file) => {
+      formData.append("variant_images", file);
+    });
+
+    productAPI
+      .uploadImages(formData)
+      .then((res) => {
+        setSizeChart(res.data.images[0]);
+        hideLoader();
+      })
+      .catch((err) => {
+        hideLoader();
+        console.log(err);
+      });
+  };
+
   let updateProductFormik = useFormik({
     initialValues: {
       inputCateName: productItem.category ? productItem.category._id : '',
@@ -163,7 +184,8 @@ const ProductEdit = (props) => {
             sizes: value.sizes,
             images: value.images.map(image => image._id)
           }
-        })
+        }),
+        "sizeChart": sizeChart,
       };
 
       showLoader();
@@ -303,6 +325,19 @@ const ProductEdit = (props) => {
                             <small className="active-error">{updateProductFormik.errors.inputProductPrice}</small>
                           )}
                         </div>
+
+                        <div className="form-group">
+                          <label className="">Sizechart</label>
+                          <div className="">
+                            <input
+                              type="file"
+                              className="form-control"
+                              name={`sizechart`}
+                              multiple
+                              onChange={(event) => handleUploadSizeChart(event)}
+                            />
+                          </div>
+                        </div>
                       </div>
 
                       <div className="col-6">
@@ -356,6 +391,14 @@ const ProductEdit = (props) => {
                             <label htmlFor="inputNumberOfRating">Số lần</label>
                             <input type="number" className="form-control" name="inputNumberOfRating" placeholder="Nhập số lần đánh giá sản phẩm...." value={updateProductFormik.values.inputNumberOfRating} onChange={updateProductFormik.handleChange} />
                           </div>
+                        </div>
+
+                        <div className="mb-2 col-8">
+                          <img
+                            src={sizeChart ? sizeChart.url : ""}
+                            style={{ height: "150px", marginRight: "10px" }}
+                            alt={"size-chart"}
+                          />
                         </div>
                       </div>
                     </div>
