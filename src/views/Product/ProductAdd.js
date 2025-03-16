@@ -19,6 +19,7 @@ const ProductAdd = () => {
   const [optionValueInputs, setOptionValueInputs] = useState([{ color: null, sizes: [], images: [] }]);
   const [colors, setColors] = useState([]);
   const [sizes, setSizes] = useState([]);
+  const [sizeChart, setSizeChart] = useState(null);
 
   useEffect(() => {
     showLoader();
@@ -101,6 +102,25 @@ const ProductAdd = () => {
       });
   }
 
+  const handleUploadSizeChart = (event) => {
+    showLoader();
+    let formData = new FormData();
+    Array.from(event.target.files).forEach((file) => {
+      formData.append("variant_images", file);
+    });
+
+    productAPI
+      .uploadImages(formData)
+      .then((res) => {
+        setSizeChart(res.data.images[0]);
+        hideLoader();
+      })
+      .catch((err) => {
+        hideLoader();
+        console.log(err);
+      });
+  };
+
   let addProductFormik = useFormik({
     initialValues: {
       inputCateName: "",
@@ -150,7 +170,8 @@ const ProductAdd = () => {
             sizes: value.sizes,
             images: value.images.map(image => image._id)
           }
-        })
+        }),
+        "sizeChart": sizeChart,
       };
 
       showLoader();
@@ -304,6 +325,18 @@ const ProductAdd = () => {
                               </small>
                             )}
                         </div>
+                        <div className="form-group">
+                          <label className="">Sizechart</label>
+                          <div className="">
+                            <input
+                              type="file"
+                              className="form-control"
+                              name={`sizechart`}
+                              multiple
+                              onChange={(event) => handleUploadSizeChart(event)}
+                            />
+                          </div>
+                        </div>
                       </div>
 
                       <div className="col-6 col-sm-6">
@@ -413,6 +446,14 @@ const ProductAdd = () => {
                             <label htmlFor="inputNumberOfRating">Số lần</label>
                             <input type="number" className="form-control" name="inputNumberOfRating" placeholder="Nhập số lần đánh giá sản phẩm...." value={addProductFormik.values.inputNumberOfRating} onChange={addProductFormik.handleChange} />
                           </div>
+                        </div>
+
+                        <div className="mb-2 col-8">
+                          <img
+                            src={sizeChart ? sizeChart.url : ""}
+                            style={{ height: "150px", marginRight: "10px" }}
+                            alt={"size-chart"}
+                          />
                         </div>
 
                         {/* <div className="form-group">
