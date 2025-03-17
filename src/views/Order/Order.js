@@ -150,9 +150,9 @@ const Order = () => {
                             <td>{v.o_code}</td>
                             <td>
                               <ul>
-                                <li>Người nhận: {v.o_nameReceiver}</li>
-                                <li>Số điện thoại: {v.o_phoneReceiver}</li>
-                                <li>Địa chỉ: {v.o_shippingAddress}</li>
+                                <li>Người nhận: {`${v.o_firstName} ${v.o_lastName}`}</li>
+                                <li>Số điện thoại: {v.o_phone}</li>
+                                <li>Địa chỉ: {`${v.o_shippingAddress1} ${v.o_shippingAddress2}, số nhà ${v.o_shippingHouseNumber}, quận/huyện ${v.o_shippingState}, tỉnh/thành phố ${v.o_shippingCity}, ${v.o_shippingCountry}`}</li>
                               </ul>
                             </td>
                             <td> {v.o_totalPrice} VNĐ </td>
