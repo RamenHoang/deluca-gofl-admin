@@ -118,6 +118,17 @@ const Sidebar = (props) => {
 
             <li className="nav-item">
               <NavLink
+                to="/payments"
+                className="nav-link"
+                activeClassName="active"
+              >
+                <i className="nav-icon fab fa-product-hunt"></i>
+                <p>Thanh toán</p>
+              </NavLink>
+            </li>
+
+            <li className="nav-item">
+              <NavLink
                 to="/comments"
                 className="nav-link"
                 activeClassName="active"
@@ -156,53 +167,40 @@ const Sidebar = (props) => {
               </NavLink>
             </li>
 
-            <li className="nav-header">Đối tác</li>
-
-            {/* <li className="nav-item">
-              <NavLink
-                to="/authors"
-                className="nav-link"
-                activeClassName="active"
-              >
-                <i className="nav-icon fas fa-users"></i>
-                <p>Tác giả</p>
-              </NavLink>
-            </li>
-
-            <li className="nav-item">
-              <NavLink
-                to="/companies"
-                className="nav-link"
-                activeClassName="active"
-              >
-                <i className="nav-icon fas fa-warehouse"></i>
-                <p> Nhà xuất bản </p>
-              </NavLink>
-            </li> */}
-
-            <li className="nav-item">
-              <NavLink
-                to="/customers"
-                className="nav-link"
-                activeClassName="active"
-              >
-                <i className="nav-icon far fa-circle nav-icon"></i>
-                <p>Khách hàng</p>
-              </NavLink>
-            </li>
+            {currUser.role === "admin" ? (
+              <>
+                <li className="nav-header">Đối tác</li>
+                <li className="nav-item">
+                  <NavLink
+                    to="/partners"
+                    className="nav-link"
+                    activeClassName="active"
+                  >
+                    <i className="nav-icon fas fa-handshake"></i>
+                    <p>Đối tác</p>
+                  </NavLink>
+                </li>
+              </>
+            ) : (
+              ""
+            )}
 
             <li className="nav-header">Hệ thống</li>
 
-            <li className="nav-item">
-              <NavLink
-                to="/staffs"
-                className="nav-link"
-                activeClassName="active"
-              >
-                <i className="nav-icon fas fa-users"></i>
-                <p> Quản lý nhân viên </p>
-              </NavLink>
-            </li>
+            {currUser.role === "admin" ? (
+              <li className="nav-item">
+                <NavLink
+                  to="/admins"
+                  className="nav-link"
+                  activeClassName="active"
+                >
+                  <i className="nav-icon fas fa-user-shield"></i>
+                  <p>Quản lý nhân viên</p>
+                </NavLink>
+              </li>
+            ) : (
+              ""
+            )}
 
             <li className="nav-item">
               <NavLink

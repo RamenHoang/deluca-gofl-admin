@@ -33,6 +33,7 @@ import NotFound from "./views/NotFound/NotFound";
 import Invoice from "./views/Invoice/Invoice";
 import Color from "./views/Color/Color";
 import Size from "./views/Size/Size";
+import Payment from "./views/Payment/Payment";
 import { ToastProvider } from "./components/Toasts/Toasts";
 
 const hist = createBrowserHistory();
@@ -101,6 +102,12 @@ const App = () => {
           exact
           path="/products/edit/:id"
           component={ProductEdit}
+          layout={Admin}
+        />
+        <PrivateRoute
+          exact
+          path="/payments"
+          component={Payment}
           layout={Admin}
         />
         <PrivateRoute exact path="/authors" component={Author} layout={Admin} />
