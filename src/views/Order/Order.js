@@ -11,6 +11,7 @@ const Order = () => {
   const [loader, showLoader, hideLoader] = useFullPageLoader();
   const [query, setQuery] = useState('');
   const [status, setStatus] = useState('');
+  const [payment, setPayment] = useState('');
   const [orders, setOrders] = useState([]);
   const [orderDetail, setOrderDetail] = useState();
 
@@ -68,7 +69,18 @@ const Order = () => {
   const filterByStatus = (e) => {
     setStatus(e.target.value);
     showLoader();
-    orderAPI.filterByStatus(e.target.value).then(res => {
+    orderAPI.filter(e.target.value, payment).then(res => {
+      setOrders(res.data.data);
+      hideLoader();
+    }).catch(err => {
+
+    });
+  }
+
+  const filterByPayment = (e) => {
+    setPayment(e.target.value);
+    showLoader();
+    orderAPI.filter(status, e.target.value).then(res => {
       setOrders(res.data.data);
       hideLoader();
     }).catch(err => {
@@ -113,13 +125,18 @@ const Order = () => {
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
                       />
-                      <select className="form-control" value={status} onChange={filterByStatus} >
+                      <select className="form-control mr-sm-2" value={status} onChange={filterByStatus} >
                         <option value="" >Tình trạng đơn hàng...</option>
                         <option value="Đặt hàng thành công">Đặt hàng thành công</option>
                         <option value="Tiếp nhận">Tiếp nhận</option>
                         <option value="Đang giao hàng">Đang giao hàng</option>
                         <option value="Đã giao hàng">Đã giao hàng</option>
                         <option value="Đã hủy">Đã hủy</option>
+                      </select>
+                      <select className="form-control" value={payment} onChange={filterByPayment} >
+                        <option value="" >Phương thức thanh toán</option>
+                        <option value="pay-cash">COD</option>
+                        <option value="pay-qr-code">QR Code</option>
                       </select>
                       <button className="btn btn-outline-success ml-2 my-2 my-sm-0 p-1" type="button">
                         <i className="fas fa-search"></i>
@@ -135,6 +152,7 @@ const Order = () => {
                         <th>STT</th>
                         <th>Mã đơn hàng</th>
                         <th>Thông tin người nhận</th>
+                        <th>Phương thức thanh toán</th>
                         <th>Tổng tiền</th>
                         <th>Trạng thái</th>
                         <th>Thời gian đặt hàng</th>
@@ -155,6 +173,7 @@ const Order = () => {
                                 <li>Địa chỉ: {`${v.o_shippingAddress1} ${v.o_shippingAddress2}, số nhà ${v.o_shippingHouseNumber}, quận/huyện ${v.o_shippingState}, tỉnh/thành phố ${v.o_shippingCity}, ${v.o_shippingCountry}`}</li>
                               </ul>
                             </td>
+                            <td>{v.o_payment == 'pay-cash' ? (<span className='badge bg-info'>COD</span>) : (<span className='badge bg-success'>QR Code</span>)}</td>
                             <td> {v.o_totalPrice} VNĐ </td>
                             <td>
                               {v.o_status === "Đặt hàng thành công" ? (<span className="badge bg-light">Đặt hàng thành công</span>) : ''}
@@ -213,6 +232,7 @@ const Order = () => {
                         <th>STT</th>
                         <th>Mã đơn hàng</th>
                         <th>Thông tin người nhận</th>
+                        <th>Phương thức thanh toán</th>
                         <th>Tổng tiền</th>
                         <th>Trạng thái</th>
                         <th>Thời gian đặt hàng</th>

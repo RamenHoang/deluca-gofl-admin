@@ -21,8 +21,23 @@ const orderAPI = {
         return axiosClient.put(url, data);
     },
 
-    filterByStatus: (status) => {
-        let url = `/orders/filter-by-status?status=${status}`;
+    filter: (status, payment) => {
+        let url = `/orders/filter`;
+
+        let query = [];
+
+        if (status) {
+            query.push(`status=${status}`);
+        }
+
+        if (payment) {
+            query.push(`payment=${payment}`);
+        }
+
+        if (query.length > 0) {
+            url += `?${query.join('&')}`;
+        }
+
         return axiosClient.get(url);
     }
 }
