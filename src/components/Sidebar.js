@@ -172,7 +172,7 @@ const Sidebar = (props) => {
                 <li className="nav-header">Đối tác</li>
                 <li className="nav-item">
                   <NavLink
-                    to="/partners"
+                    to="/customers"
                     className="nav-link"
                     activeClassName="active"
                   >
@@ -190,7 +190,7 @@ const Sidebar = (props) => {
             {currUser.role === "admin" ? (
               <li className="nav-item">
                 <NavLink
-                  to="/admins"
+                  to="/staffs"
                   className="nav-link"
                   activeClassName="active"
                 >
