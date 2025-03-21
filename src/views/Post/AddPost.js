@@ -223,7 +223,7 @@ const AddPost = () => {
                 )}
               </div>
 
-              <div className="form-group" style={{ marginBottom: '1.5rem' }}>
+              {/* <div className="form-group" style={{ marginBottom: '1.5rem' }}>
                 <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
                   <input
                     type="checkbox"
@@ -234,7 +234,7 @@ const AddPost = () => {
                   />
                   Xuất bản
                 </label>
-              </div>
+              </div> */}
 
               <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                 <button
