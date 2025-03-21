@@ -156,7 +156,6 @@ const Post = () => {
                         <th>Tiêu đề</th>
                         <th>Hình ảnh</th>
                         <th>Ngày tạo</th>
-                        <th>Trạng thái</th>
                         <th>Hành động</th>
                       </tr>
                     </thead>
@@ -185,7 +184,7 @@ const Post = () => {
                                 />
                               </td>
                               <td>{new Date(v.createdAt).toLocaleDateString()}</td>
-                              <td>
+                              {/* <td>
                                 {v.published === true ? (
                                   <button
                                     className="badge rounded-pill bg-primary"
@@ -210,7 +209,7 @@ const Post = () => {
                                 ) : (
                                   ""
                                 )}
-                              </td>
+                              </td> */}
                               <td className="d-flex border-left-0 border-right-0 border-bottom-0">
                                 <button
                                   className="btn btn-danger"
@@ -234,7 +233,7 @@ const Post = () => {
                         <th>Tiêu đề</th>
                         <th>Hình ảnh</th>
                         <th>Ngày tạo</th>
-                        <th>Trạng thái</th>
+                        {/* <th>Trạng thái</th> */}
                         <th>Hành động</th>
                       </tr>
                     </tfoot>

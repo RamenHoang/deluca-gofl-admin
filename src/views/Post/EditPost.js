@@ -291,7 +291,7 @@ const EditPost = () => {
                       )}
                     </div>
 
-                    <div className="form-check">
+                    {/* <div className="form-check">
                       <input
                         type="checkbox"
                         className="form-check-input"
@@ -303,7 +303,7 @@ const EditPost = () => {
                       <label className="form-check-label" htmlFor="published">
                         Xuất bản ngay
                       </label>
-                    </div>
+                    </div> */}
                   </div>
 
                   <div className="card-footer">
