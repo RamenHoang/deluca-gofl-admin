@@ -5,6 +5,7 @@ import { Link, useHistory } from 'react-router-dom';
 import postAPI from '../../apis/postAPI';
 import categoryAPI from '../../apis/categoryAPI';
 import { errorToast, successToast } from "../../components/Toasts/Toasts";
+import useFullPageLoader from "../../hooks/useFullPageLoader";
 
 const AddPost = () => {
   const [post, setPost] = useState({
@@ -16,18 +17,22 @@ const AddPost = () => {
 
   const [featuredImage, setFeaturedImage] = useState(null);
   const [imagePreview, setImagePreview] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [loader, showLoader, hideLoader] = useFullPageLoader();
   const [categories, setCategories] = useState([]);
   const history = useHistory();
   const fileInputRef = useRef(null);
 
   useEffect(() => {
+    showLoader();
     categoryAPI.getAllCategories()
       .then(response => {
         setCategories(response.data.data);
+        hideLoader();
       })
       .catch(error => {
         console.log(error);
+        hideLoader();
+        errorToast("Lấy danh mục thất bại !");
       });
   }, []);
 
@@ -58,14 +63,17 @@ const AddPost = () => {
       reader.readAsDataURL(file);
       const formData = new FormData();
       formData.append('file', file);
+      showLoader();
       postAPI.upload(formData)
         .then(response => {
           successToast("Upload ảnh bìa thành công !");
           setFeaturedImage(response.data.image._id);
+          hideLoader();
         })
         .catch(error => {
           console.log(error);
           errorToast("Upload ảnh bìa thất bại !");
+          hideLoader();
         });
     }
   };
@@ -77,14 +85,17 @@ const AddPost = () => {
           const formData = new FormData();
           loader.file.then((file) => {
             formData.append('file', file);
-
+            showLoader();
             postAPI.upload(formData)
               .then(response => {
+                hideLoader();
                 resolve({
                   default: response.data.image.url
                 });
               })
               .catch(error => {
+                console.log(error);
+                hideLoader();
                 reject(error);
               });
           });
@@ -106,7 +117,6 @@ const AddPost = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
 
     try {
       const formData = {};
@@ -120,13 +130,14 @@ const AddPost = () => {
         formData['featuredImage'] = featuredImage;
       }
 
+      showLoader();
       await postAPI.createPost(formData);
       successToast("Thêm tin tức thành công !");
       history.push({ pathname: "/posts" });
     } catch (error) {
       errorToast("Thêm tin tức thất bại !");
     } finally {
-      setLoading(false);
+      hideLoader();
     }
   };
 
@@ -239,23 +250,23 @@ const AddPost = () => {
               <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                 <button
                   type="submit"
-                  disabled={loading}
                   style={{
                     padding: '0.75rem 1.5rem',
-                    backgroundColor: loading ? '#cccccc' : '#1976d2',
+                    backgroundColor: '#1976d2',
                     color: 'white',
                     border: 'none',
                     borderRadius: '4px',
-                    cursor: loading ? 'not-allowed' : 'pointer'
+                    cursor: 'pointer'
                   }}
                 >
-                  {loading ? 'Đang lưu...' : 'Lưu bài viết'}
+                  Lưu bài viết
                 </button>
               </div>
             </div>
           </form>
         </div>
       </section>
+      {loader}
     </div>
   );
 };
