@@ -35,6 +35,9 @@ import Color from "./views/Color/Color";
 import Size from "./views/Size/Size";
 import Payment from "./views/Payment/Payment";
 import { ToastProvider } from "./components/Toasts/Toasts";
+import AddPost from './views/Post/AddPost';
+import Post from './views/Post/Post';
+import EditPost from './views/Post/EditPost';
 
 const hist = createBrowserHistory();
 
@@ -44,6 +47,24 @@ const App = () => {
       <ToastProvider />
       <Switch>
         <PublicRoute exact path="/" component={Login} />
+        <PrivateRoute
+          exact
+          path="/posts"
+          component={Post}
+          layout={Admin}
+        />
+        <PrivateRoute
+          exact
+          path="/posts/add"
+          component={AddPost}
+          layout={Admin}
+        />
+        <PrivateRoute
+          exact
+          path="/posts/edit/:id"
+          component={EditPost}
+          layout={Admin}
+        />
         <PrivateRoute
           exact
           path="/dashboard"
