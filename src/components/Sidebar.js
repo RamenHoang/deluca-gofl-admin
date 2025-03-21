@@ -129,6 +129,17 @@ const Sidebar = (props) => {
 
             <li className="nav-item">
               <NavLink
+                to="/posts"
+                className="nav-link"
+                activeClassName="active"
+              >
+                <i className="nav-icon fab fa-product-hunt"></i>
+                <p>Tin tức</p>
+              </NavLink>
+            </li>
+
+            <li className="nav-item">
+              <NavLink
                 to="/comments"
                 className="nav-link"
                 activeClassName="active"
