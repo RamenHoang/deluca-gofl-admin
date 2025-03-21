@@ -101,6 +101,36 @@ const ProductAdd = () => {
         console.log(err);
       });
   }
+  
+  const moveImageUp = (variantIndex, imageIndex) => {
+    if (imageIndex === 0) return; // Already at the top
+    
+    const values = [...optionValueInputs];
+    const images = [...values[variantIndex].images];
+    
+    // Swap with previous image
+    const temp = images[imageIndex];
+    images[imageIndex] = images[imageIndex - 1];
+    images[imageIndex - 1] = temp;
+    
+    values[variantIndex].images = images;
+    setOptionValueInputs(values);
+  };
+
+  const moveImageDown = (variantIndex, imageIndex) => {
+    const values = [...optionValueInputs];
+    const images = values[variantIndex].images;
+    
+    if (imageIndex === images.length - 1) return; // Already at the bottom
+    
+    // Swap with next image
+    const temp = images[imageIndex];
+    images[imageIndex] = images[imageIndex + 1];
+    images[imageIndex + 1] = temp;
+    
+    values[variantIndex].images = images;
+    setOptionValueInputs(values);
+  };
 
   const handleUploadSizeChart = (event) => {
     showLoader();
@@ -615,11 +645,31 @@ const ProductAdd = () => {
                           </div>
                           <div className="mb-2 col-8">
                             {input.images.map((image, idx) => (
-                              <img
-                                src={image.url}
-                                style={{ height: "150px", marginRight: "10px" }}
-                                alt={`previewImage-${index}-${idx}`}
-                              />
+                              <div key={`image-${index}-${idx}`} style={{ display: "inline-block", position: "relative", marginRight: "10px" }}>
+                                <img
+                                  src={image.url}
+                                  style={{ height: "150px" }}
+                                  alt={`previewImage-${index}-${idx}`}
+                                />
+                                <div style={{ position: "absolute", top: 0, right: 0 }}>
+                                  <button 
+                                    type="button" 
+                                    className="btn btn-sm btn-primary" 
+                                    onClick={() => moveImageUp(index, idx)}
+                                    disabled={idx === 0}
+                                  >
+                                    <i className="fas fa-arrow-up"></i>
+                                  </button>
+                                  <button 
+                                    type="button" 
+                                    className="btn btn-sm btn-primary" 
+                                    onClick={() => moveImageDown(index, idx)}
+                                    disabled={idx === input.images.length - 1}
+                                  >
+                                    <i className="fas fa-arrow-down"></i>
+                                  </button>
+                                </div>
+                              </div>
                             ))}
                           </div>
                         </div>
