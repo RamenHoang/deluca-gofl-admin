@@ -187,7 +187,7 @@ const Product = () => {
                               <td>{v.p_name}</td>
                               <td>
                                 <img
-                                  src={v.variants[0].images[0].url}
+                                  src={v.variants[0].images.length > 0 ? v.variants[0].images[0].url : ""}
                                   alt="Product"
                                   className="img-thumbnail"
                                   style={{ height: "100px" }}
