@@ -75,6 +75,60 @@ const Category = () => {
     });
   };
 
+  const handleToggleDiscount = (id, isChecked) => {
+    showLoader();
+    
+    // If the checkbox is being checked, prepare to uncheck all others
+    if (isChecked) {
+      // Create updated data with all discount flags set to false
+      let updatedData = dataCate.map(category => ({
+        ...category,
+        isDiscount: category._id === id // Only the selected category will be true
+      }));
+      
+      // Update all categories that need changing
+      const updatePromises = updatedData
+        .map(category => 
+          categoryAPI.updateCateById(category._id, { isDiscount: category.isDiscount })
+        );
+      
+      Promise.all(updatePromises)
+        .then(() => {
+          setDataCate(updatedData);
+          hideLoader();
+          successToast('Cập nhật danh mục giảm giá thành công!');
+        })
+        .catch(err => {
+          hideLoader();
+          errorToast('Có lỗi xảy ra, vui lòng thử lại');
+          console.error(err);
+        });
+    } else {
+      // If unchecking, just update this single category
+      categoryAPI.updateCateById(id, { isDiscount: false })
+        .then(res => {
+          if (res.data.message === 'SUCCESS') {
+            const updatedDataCate = dataCate.map(value => {
+              if (value._id === id) {
+                value.isDiscount = false;
+              }
+              return value;
+            });
+            setDataCate(updatedDataCate);
+            hideLoader();
+            successToast('Đã hủy danh mục giảm giá!');
+          } else {
+            hideLoader();
+            errorToast('Có lỗi xảy ra, vui lòng thử lại');
+          }
+        })
+        .catch(err => {
+          hideLoader();
+          errorToast('Có lỗi xảy ra, vui lòng thử lại');
+        });
+    }
+  };
+
   return (
     <div className="content-wrapper">
       {/* Content Header (Page header) */}
@@ -131,6 +185,7 @@ const Category = () => {
                         <th>Số thứ tự</th>
                         <th>Tên danh mục</th>
                         <th>Danh mục cha</th>
+                        <th>Giảm giá</th>
                         <th>Hành động</th>
                       </tr>
                     </thead>
@@ -158,6 +213,18 @@ const Category = () => {
                                 }
                               </td>
                               <td>
+                                <div className="custom-control custom-checkbox">
+                                  <input 
+                                    type="checkbox" 
+                                    className="custom-control-input" 
+                                    id={`discountCheck-${v._id}`} 
+                                    checked={v.isDiscount || false}
+                                    onChange={(e) => handleToggleDiscount(v._id, e.target.checked)}
+                                  />
+                                  <label className="custom-control-label" htmlFor={`discountCheck-${v._id}`}></label>
+                                </div>
+                              </td>
+                              <td>
                                 <button className="btn btn-danger" onClick={() => handleDeleteCate(v._id)}>
                                   <i className="fas fa-trash-alt mr-1"></i> Xóa
                                 </button>
@@ -178,6 +245,7 @@ const Category = () => {
                         <th>Số thứ tự</th>
                         <th>Tên danh mục</th>
                         <th>Danh mục cha</th>
+                        <th>Giảm giá</th>
                         <th>Hành động</th>
                       </tr>
                     </tfoot>
