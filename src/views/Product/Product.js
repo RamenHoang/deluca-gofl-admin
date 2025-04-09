@@ -137,7 +137,9 @@ const Product = () => {
                         placeholder="Nhập tên cần tìm kiếm...."
                         aria-label="Search"
                         value={query}
-                        onChange={(e) => setQuery(e.target.value)}
+                        onChange={(e) => {
+                          setQuery(e.target.value)
+                        }}
                       />
                       <button
                         className="btn btn-outline-primary my-2 my-sm-0 p-1"
@@ -174,9 +176,7 @@ const Product = () => {
                             val.p_name
                               .toLowerCase()
                               .indexOf(query.toLowerCase()) > -1 ||
-                            val.category.c_name
-                              .toLowerCase()
-                              .indexOf(query.toLowerCase()) > -1
+                            val.category.some(item => item.c_name.toLowerCase().indexOf(query.toLowerCase()) > -1)
                             ? val
                             : ""
                         )
