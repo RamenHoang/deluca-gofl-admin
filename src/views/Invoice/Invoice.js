@@ -64,7 +64,7 @@ const Invoice = (props) => {
           <div className="row">
             <div
               ref={invoice}
-              className="offset-xl-2 col-xl-8 col-lg-12 col-md-12 col-sm-12 col-12 padding"
+              className="col-12 padding"
             >
               <div className="card">
                 <div className="card-header p-4">
@@ -126,7 +126,7 @@ const Invoice = (props) => {
                               </td>
                               <td className="left">
                                 <img
-                                  src={v.variant.images[0].url}
+                                  src={v.variant.images.length > 0 ? v.variant.images[0].url : 'N/A'}
                                   style={{ height: "50px" }}
                                   alt="description product"
                                 />
