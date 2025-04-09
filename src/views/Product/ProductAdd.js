@@ -151,9 +151,24 @@ const ProductAdd = () => {
       });
   };
 
+  const handleCategoryChange = (categoryId) => {
+    const currentCategories = [...addProductFormik.values.inputCateName];
+    const categoryIndex = currentCategories.indexOf(categoryId);
+
+    if (categoryIndex === -1) {
+      // Add category if not selected
+      currentCategories.push(categoryId);
+    } else {
+      // Remove category if already selected
+      currentCategories.splice(categoryIndex, 1);
+    }
+
+    addProductFormik.setFieldValue('inputCateName', currentCategories);
+  };
+
   let addProductFormik = useFormik({
     initialValues: {
-      inputCateName: "",
+      inputCateName: [],
       inputProductName: "",
       inputProductCode: "",
       inputProductHot: "false",
@@ -167,7 +182,9 @@ const ProductAdd = () => {
       inputNumberOfRating: 0,
     },
     validationSchema: Yup.object({
-      inputCateName: Yup.string().required("Bắt buộc chọn danh mục !"),
+      inputCateName: Yup.array()
+        .min(1, "Bắt buộc chọn ít nhất một danh mục !")
+        .required("Bắt buộc chọn danh mục !"),
       inputProductName: Yup.string()
         .required("Bắt buộc nhập tên sản phẩm !")
         .max(255, "Tên sản phẩm quá dài, nhỏ hơn 255 kí tự !"),
@@ -272,25 +289,26 @@ const ProductAdd = () => {
                       <div className="col-6 col-sm-6">
                         <div className="form-group">
                           <label htmlFor="inputCateName">Danh mục (*)</label>
-                          <select
-                            className="form-control"
-                            name="inputCateName"
-                            value={addProductFormik.values.inputCateName}
-                            onChange={addProductFormik.handleChange}
-                          >
-                            <option value="">Chọn danh mục...</option>
-                            {cate.map((value, index) => {
-                              return (
-                                <option value={value._id}>
+                          <div className="category-checkboxes">
+                            {cate.map((value, index) => (
+                              <div className="form-check" key={index}>
+                                <input
+                                  type="checkbox"
+                                  className="form-check-input"
+                                  id={`category-${value._id}`}
+                                  checked={addProductFormik.values.inputCateName.includes(value._id)}
+                                  onChange={() => handleCategoryChange(value._id)}
+                                />
+                                <label className="form-check-label" htmlFor={`category-${value._id}`}>
                                   {value.c_name}
-                                </option>
-                              );
-                            })}
-                          </select>
+                                </label>
+                              </div>
+                            ))}
+                          </div>
 
                           {addProductFormik.errors.inputCateName &&
                             addProductFormik.touched.inputCateName && (
-                              <small>
+                              <small className="active-error">
                                 {addProductFormik.errors.inputCateName}
                               </small>
                             )}

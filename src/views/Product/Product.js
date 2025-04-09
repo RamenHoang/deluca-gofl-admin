@@ -171,12 +171,12 @@ const Product = () => {
                       {allProducts
                         .filter((val) =>
                           query === "" ||
-                          val.p_name
-                            .toLowerCase()
-                            .indexOf(query.toLowerCase()) > -1 ||
-                          val.category.c_name
-                            .toLowerCase()
-                            .indexOf(query.toLowerCase()) > -1
+                            val.p_name
+                              .toLowerCase()
+                              .indexOf(query.toLowerCase()) > -1 ||
+                            val.category.c_name
+                              .toLowerCase()
+                              .indexOf(query.toLowerCase()) > -1
                             ? val
                             : ""
                         )
@@ -222,9 +222,13 @@ const Product = () => {
                                 )}
                               </td>
                               <td>
-                                <span className="badge badge-info">
-                                  {v.category.c_name}
-                                </span>
+                                {v.category.map((item) => {
+                                  return (
+                                    <span className="badge badge-info mr-1">
+                                      {item.c_name}
+                                    </span>
+                                  );
+                                })}
                               </td>
                               <td className="d-flex border-left-0 border-right-0 border-bottom-0">
                                 <button
