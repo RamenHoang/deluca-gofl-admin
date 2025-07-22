@@ -128,7 +128,11 @@ const EditPost = () => {
   };
 
   const editorConfiguration = {
-    toolbar: ['heading', '|', 'bold', 'italic', 'link', 'bulletedList', 'numberedList', '|', 'imageUpload', 'blockQuote', 'insertTable', 'undo', 'redo'],
+    toolbar: ['heading', '|', 'bold', 'italic', 'link', 'bulletedList', 'numberedList', '|', 'alignment', '|', 'imageUpload', 'blockQuote', 'insertTable', 'undo', 'redo'],
+    image: {
+      toolbar: ['imageTextAlternative', 'imageStyle:alignLeft', 'imageStyle:alignCenter', 'imageStyle:alignRight'],
+      styles: ['alignLeft', 'alignCenter', 'alignRight']
+    },
     extraPlugins: [
       function (editor) {
         editor.plugins.get('FileRepository').createUploadAdapter = (loader) => {
